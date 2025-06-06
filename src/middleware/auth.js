@@ -3,22 +3,37 @@ require('dotenv').config();
 
 const auth = (req, res, next) => {
   try {
-    const token = req.header('x-auth-token') || req.header('Authorization')?.replace('Bearer ', '');
+    // Verificar diferentes formatos de token
+    let token = req.header('x-auth-token');
+    if (!token) {
+      const authHeader = req.header('Authorization');
+      if (authHeader) {
+        token = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : authHeader;
+      }
+    }
 
     if (!token) {
       return res.status(401).json({ message: 'Acesso negado. Token não fornecido.' });
     }
 
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    req.user = decoded;
-    next();
+    try {
+      const decoded = jwt.verify(token, process.env.JWT_SECRET);
+      req.user = {
+        id: decoded.userId,
+        isAdmin: decoded.isAdmin
+      };
+      next();
+    } catch (jwtError) {
+      console.error('Erro ao verificar token:', jwtError);
+      if (jwtError.name === 'JsonWebTokenError') {
+        return res.status(401).json({ message: 'Token inválido.' });
+      } else if (jwtError.name === 'TokenExpiredError') {
+        return res.status(401).json({ message: 'Token expirado.' });
+      }
+      return res.status(401).json({ message: 'Erro na autenticação.' });
+    }
   } catch (error) {
     console.error('Erro de autenticação:', error);
-    if (error.name === 'JsonWebTokenError') {
-      return res.status(401).json({ message: 'Token inválido.' });
-    } else if (error.name === 'TokenExpiredError') {
-      return res.status(401).json({ message: 'Token expirado.' });
-    }
     res.status(401).json({ message: 'Erro na autenticação.' });
   }
 };

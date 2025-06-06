@@ -5,8 +5,14 @@ require('dotenv').config();
 
 const app = express();
 
-// Middleware
-app.use(cors());
+// Configuração do CORS
+app.use(cors({
+  origin: 'http://localhost:5173', // URL do frontend
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'x-auth-token']
+}));
+
 app.use(express.json());
 
 // Conectar ao banco de dados

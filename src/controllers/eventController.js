@@ -4,18 +4,35 @@ class EventController {
   // Criar evento
   async createEvent(req, res) {
     try {
-      const eventData = {
-        ...req.body,
-        createdBy: req.user.userId
-      };
+      const { date, artist, time, image, description } = req.body;
 
-      const event = new Event(eventData);
+      // Validação básica
+      if (!date || !artist || !time) {
+        return res.status(400).json({ 
+          message: 'Por favor, preencha todos os campos obrigatórios',
+          details: {
+            date: !date ? 'Data é obrigatória' : null,
+            artist: !artist ? 'Artista é obrigatório' : null,
+            time: !time ? 'Horário é obrigatório' : null
+          }
+        });
+      }
+
+      const event = new Event({
+        date,
+        artist,
+        time,
+        image,
+        description,
+        createdBy: req.user.id
+      });
+
       await event.save();
       res.status(201).json(event);
     } catch (error) {
       console.error('Erro ao criar evento:', error);
       if (error.name === 'ValidationError') {
-        return res.status(400).json({
+        return res.status(400).json({ 
           message: 'Erro de validação',
           details: Object.values(error.errors).map(err => err.message)
         });
@@ -27,21 +44,7 @@ class EventController {
   // Listar eventos
   async listEvents(req, res) {
     try {
-      const { status, date } = req.query;
-      const query = {};
-
-      if (status) {
-        query.status = status;
-      }
-
-      if (date) {
-        query.date = date;
-      }
-
-      const events = await Event.find(query)
-        .sort({ date: 1, time: 1 })
-        .populate('createdBy', 'name email');
-
+      const events = await Event.find().sort({ date: 1 });
       res.json(events);
     } catch (error) {
       console.error('Erro ao listar eventos:', error);
@@ -52,8 +55,7 @@ class EventController {
   // Obter evento por ID
   async getEventById(req, res) {
     try {
-      const event = await Event.findById(req.params.id)
-        .populate('createdBy', 'name email');
+      const event = await Event.findById(req.params.id);
 
       if (!event) {
         return res.status(404).json({ message: 'Evento não encontrado' });
@@ -100,27 +102,47 @@ class EventController {
     }
   }
 
-  // Atualizar evento (admin)
+  // Atualizar evento
   async updateEvent(req, res) {
     try {
-      const event = await Event.findById(req.params.id);
+      const { date, artist, time, image, description } = req.body;
+
+      // Validação básica
+      if (!date || !artist || !time) {
+        return res.status(400).json({ 
+          message: 'Por favor, preencha todos os campos obrigatórios',
+          details: {
+            date: !date ? 'Data é obrigatória' : null,
+            artist: !artist ? 'Artista é obrigatório' : null,
+            time: !time ? 'Horário é obrigatório' : null
+          }
+        });
+      }
+
+      const event = await Event.findByIdAndUpdate(
+        req.params.id,
+        {
+          date,
+          artist,
+          time,
+          image,
+          description
+        },
+        { new: true, runValidators: true }
+      );
 
       if (!event) {
         return res.status(404).json({ message: 'Evento não encontrado' });
       }
 
-      // Admin pode atualizar qualquer evento
-      const updatedEvent = await Event.findByIdAndUpdate(
-        req.params.id,
-        req.body,
-        { new: true, runValidators: true }
-      ).populate('createdBy', 'name email');
-
-      res.json(updatedEvent);
+      res.json(event);
     } catch (error) {
       console.error('Erro ao atualizar evento:', error);
+      if (error.kind === 'ObjectId') {
+        return res.status(400).json({ message: 'ID de evento inválido' });
+      }
       if (error.name === 'ValidationError') {
-        return res.status(400).json({
+        return res.status(400).json({ 
           message: 'Erro de validação',
           details: Object.values(error.errors).map(err => err.message)
         });
@@ -129,20 +151,21 @@ class EventController {
     }
   }
 
-  // Deletar evento (admin)
+  // Deletar evento
   async deleteEvent(req, res) {
     try {
-      const event = await Event.findById(req.params.id);
-
-      if (!event) {
+      const result = await Event.findByIdAndDelete(req.params.id);
+      
+      if (!result) {
         return res.status(404).json({ message: 'Evento não encontrado' });
       }
 
-      // Admin pode deletar qualquer evento
-      await event.deleteOne();
-      res.json({ message: 'Evento deletado com sucesso' });
+      res.json({ message: 'Evento removido com sucesso' });
     } catch (error) {
       console.error('Erro ao deletar evento:', error);
+      if (error.kind === 'ObjectId') {
+        return res.status(400).json({ message: 'ID de evento inválido' });
+      }
       res.status(500).json({ message: 'Erro ao deletar evento' });
     }
   }
@@ -157,7 +180,7 @@ class EventController {
       }
 
       // Verifica se o usuário é o criador do evento
-      if (event.createdBy.toString() !== req.user.userId) {
+      if (event.createdBy.toString() !== req.user.id) {
         return res.status(403).json({ message: 'Não autorizado a cancelar este evento' });
       }
 
@@ -179,7 +202,7 @@ class EventController {
       }
 
       // Verifica se o usuário é o criador do evento
-      if (event.createdBy.toString() !== req.user.userId) {
+      if (event.createdBy.toString() !== req.user.id) {
         return res.status(403).json({ message: 'Não autorizado a marcar este evento como concluído' });
       }
 
