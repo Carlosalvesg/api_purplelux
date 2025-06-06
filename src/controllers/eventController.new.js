@@ -6,7 +6,7 @@ class EventController {
     try {
       const eventData = {
         ...req.body,
-        createdBy: req.user.userId
+        createdBy: req.user.id
       };
 
       const event = new Event(eventData);
@@ -157,7 +157,7 @@ class EventController {
       }
 
       // Verifica se o usuário é o criador do evento
-      if (event.createdBy.toString() !== req.user.userId) {
+      if (event.createdBy.toString() !== req.user.id) {
         return res.status(403).json({ message: 'Não autorizado a cancelar este evento' });
       }
 
@@ -179,7 +179,7 @@ class EventController {
       }
 
       // Verifica se o usuário é o criador do evento
-      if (event.createdBy.toString() !== req.user.userId) {
+      if (event.createdBy.toString() !== req.user.id) {
         return res.status(403).json({ message: 'Não autorizado a marcar este evento como concluído' });
       }
 

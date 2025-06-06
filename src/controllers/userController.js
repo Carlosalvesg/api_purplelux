@@ -183,7 +183,10 @@ class UserController {
       }
 
       const token = jwt.sign(
-        { userId: user._id },
+        { 
+          userId: user._id,
+          isAdmin: user.isAdmin 
+        },
         process.env.JWT_SECRET,
         { expiresIn: '24h' }
       );
@@ -193,7 +196,8 @@ class UserController {
         user: {
           id: user._id,
           name: user.name,
-          email: user.email
+          email: user.email,
+          isAdmin: user.isAdmin
         }
       });
     } catch (error) {
@@ -278,6 +282,79 @@ class UserController {
     } catch (error) {
       console.error('Erro ao resetar senha:', error);
       res.status(500).json({ message: 'Erro no servidor' });
+    }
+  }
+
+  // Métodos Administrativos
+
+  // Listar todos os usuários
+  async listAllUsers(req, res) {
+    try {
+      const users = await User.find()
+        .select('-password -passwordReset')
+        .sort({ createdAt: -1 });
+      
+      res.json(users);
+    } catch (error) {
+      console.error('Erro ao listar usuários:', error);
+      res.status(500).json({ message: 'Erro ao listar usuários' });
+    }
+  }
+
+  // Atualizar usuário (admin)
+  async updateUser(req, res) {
+    try {
+      const { name, email, isAdmin, isEmailVerified } = req.body;
+      const userId = req.params.id;
+
+      const user = await User.findById(userId);
+      if (!user) {
+        return res.status(404).json({ message: 'Usuário não encontrado' });
+      }
+
+      // Atualiza apenas os campos permitidos
+      if (name) user.name = name;
+      if (email) user.email = email;
+      if (typeof isAdmin === 'boolean') user.isAdmin = isAdmin;
+      if (typeof isEmailVerified === 'boolean') user.isEmailVerified = isEmailVerified;
+
+      await user.save();
+
+      // Retorna o usuário atualizado sem a senha
+      const updatedUser = await User.findById(userId).select('-password -passwordReset');
+      res.json(updatedUser);
+    } catch (error) {
+      console.error('Erro ao atualizar usuário:', error);
+      if (error.name === 'ValidationError') {
+        return res.status(400).json({
+          message: 'Erro de validação',
+          details: Object.values(error.errors).map(err => err.message)
+        });
+      }
+      res.status(500).json({ message: 'Erro ao atualizar usuário' });
+    }
+  }
+
+  // Deletar usuário (admin)
+  async deleteUser(req, res) {
+    try {
+      const userId = req.params.id;
+
+      const user = await User.findById(userId);
+      if (!user) {
+        return res.status(404).json({ message: 'Usuário não encontrado' });
+      }
+
+      // Impede que um admin delete a si mesmo
+      if (user._id.toString() === req.user.id) {
+        return res.status(400).json({ message: 'Não é possível deletar seu próprio usuário' });
+      }
+
+      await user.deleteOne();
+      res.json({ message: 'Usuário deletado com sucesso' });
+    } catch (error) {
+      console.error('Erro ao deletar usuário:', error);
+      res.status(500).json({ message: 'Erro ao deletar usuário' });
     }
   }
 }
