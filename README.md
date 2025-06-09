@@ -113,5 +113,7 @@ npm start
 O servidor estará disponível em `http://localhost:5000` (ou na porta configurada).
 
 <div>
-<img src="https://upload.wikimedia.org/wikipedia/commons/6/6a/JavaScript-logo.png" alt="Logo" width="200"/>
+<img src="https://icon.icepanel.io/Technology/svg/Node.js.svg" width="200"/>
+<img src="https://icon.icepanel.io/Technology/svg/JavaScript.svg" width="200"/>
+<img src="https://icon.icepanel.io/Technology/svg/MongoDB.svg" width="200"/>
 </div>
