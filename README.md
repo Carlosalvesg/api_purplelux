@@ -92,19 +92,25 @@ JWT_SECRET=seu_jwt_secret
 
 1. Clone o repositório:
 
+```
 git clone [url-do-repositorio]
+```
 
 2. Instale as dependências:
 
+```
 npm install
+```
 
 3. Configure as variáveis de ambiente no arquivo `.env`
 
 4. Inicie o servidor:
 
+```
 npm start
+```
 
 O servidor estará disponível em `http://localhost:5000` (ou na porta configurada).
 
 
-<img src="[assets/logo.png](https://icons8.com.br/icon/hsPbhkOH4FMe/node-js)" alt="Logo" width="200"/>
+<img src="https://w1.pngwing.com/pngs/885/534/png-transparent-green-grass-nodejs-javascript-react-mean-angularjs-logo-symbol-thumbnail.png" alt="Logo" width="200"/>
