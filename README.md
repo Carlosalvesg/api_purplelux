@@ -114,6 +114,4 @@ O servidor estará disponível em `http://localhost:5000` (ou na porta configura
 
 <div>
 <img src="https://upload.wikimedia.org/wikipedia/commons/6/6a/JavaScript-logo.png" alt="Logo" width="200"/>
-<img src="https://cdn.pixabay.com/photo/2017/08/05/11/16/logo-2582748_1280.png" alt="Logo" width="200"/>
-<img src="https://cdn.pixabay.com/photo/2017/08/05/11/16/logo-2582747_960_720.png" alt="Logo" width="200"/>
 </div>
